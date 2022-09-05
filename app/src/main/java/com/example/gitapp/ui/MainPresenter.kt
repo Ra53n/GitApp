@@ -1,6 +1,7 @@
 package com.example.gitapp.ui
 
 import com.example.gitapp.api.GitUserResponse
+import com.example.gitapp.domain.entities.GitUserEntity
 import com.example.gitapp.domain.mappers.GitUserResponseToEntityMapper
 import com.example.gitapp.domain.repos.UsersRepo
 import retrofit2.Call
@@ -13,8 +14,13 @@ class MainPresenter(private val repo: UsersRepo) : UsersContract.Presenter {
 
     private val mapper = GitUserResponseToEntityMapper()
 
+    private var usersList: List<GitUserEntity>? = null
+    private var inProgress: Boolean = false
+
     override fun attach(view: UsersContract.View) {
         this.view = view
+        view.showProgressBar(inProgress)
+        usersList?.let { view.showUsers(it) }
     }
 
     override fun detach() {
@@ -22,7 +28,8 @@ class MainPresenter(private val repo: UsersRepo) : UsersContract.Presenter {
     }
 
     override fun loadUsers() {
-        view?.showProgressBar(true)
+        inProgress = true
+        view?.showProgressBar(inProgress)
         repo.getUsers(callback)
     }
 
@@ -32,14 +39,20 @@ class MainPresenter(private val repo: UsersRepo) : UsersContract.Presenter {
             response: Response<List<GitUserResponse>>
         ) {
             if (response.isSuccessful) {
-                view?.showProgressBar(false)
+                inProgress = false
+                view?.showProgressBar(inProgress)
                 response.body()
-                    ?.let { view?.showUsers(it.map { response -> mapper.map(response) }) }
+                    ?.let {
+                        val userList = it.map { response -> mapper.map(response) }
+                        view?.showUsers(userList)
+                        usersList = userList
+                    }
             }
         }
 
         override fun onFailure(call: Call<List<GitUserResponse>>, t: Throwable) {
-            view?.showProgressBar(false)
+            inProgress = false
+            view?.showProgressBar(inProgress)
             view?.showError()
         }
     }

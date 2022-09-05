@@ -12,34 +12,36 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/repo_title_text_view"
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_medium"
             android:layout_marginTop="@dimen/margin_medium"
             android:textSize="@dimen/text_size_24"
-            app:layout_constraintBottom_toTopOf="@id/repo_description_text_view"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/repo_description_text_view"
+            android:id="@+id/description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_medium"
+            android:textAlignment="viewStart"
+            android:textSize="@dimen/text_size_16"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/forks"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/margin_medium"
-            android:textSize="@dimen/text_size_24"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/repo_title_text_view" />
-
-        <TextView
-            android:id="@+id/repo_forks_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/title"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/title" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
