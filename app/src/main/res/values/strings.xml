@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GitApp</string>
+    <string name="error_load_users">Fail to load users</string>
 </resources>
