@@ -9,7 +9,12 @@ import com.example.gitapp.R
 import com.example.gitapp.databinding.UserItemBinding
 import com.example.gitapp.domain.entities.GitUserEntity
 
-class UsersAdapter : RecyclerView.Adapter<UsersAdapter.UsersViewHolder>() {
+class UsersAdapter(private val controller: Controller) :
+    RecyclerView.Adapter<UsersAdapter.UsersViewHolder>() {
+
+    interface Controller {
+        fun onUserClick(user: GitUserEntity)
+    }
 
     private var list = listOf<GitUserEntity>()
 
@@ -35,6 +40,7 @@ class UsersAdapter : RecyclerView.Adapter<UsersAdapter.UsersViewHolder>() {
             binding.avatar.load(user.avatarUrl)
             binding.loginTextView.text = user.login
             binding.uidTextView.text = user.id
+            binding.card.setOnClickListener { controller.onUserClick(user) }
         }
     }
 }
