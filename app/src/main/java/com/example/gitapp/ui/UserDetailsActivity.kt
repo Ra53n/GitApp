@@ -15,15 +15,14 @@ import com.example.gitapp.domain.entities.GitUserEntity
 
 const val USER_BUNDLE_KEY = "USER_BUNDLE_KEY"
 
-class UserDetailsActivity : AppCompatActivity(),
-    UserDetailsContract.View {
+class UserDetailsActivity : AppCompatActivity() {
     lateinit var user: GitUserEntity
 
     private val adapter = ReposAdapter()
 
     private lateinit var binding: UserDetailsActivityBinding
 
-    private lateinit var presenter: UserDetailsContract.Presenter
+    private lateinit var viewModel: UserDetailsContract.ViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +36,10 @@ class UserDetailsActivity : AppCompatActivity(),
 
         initRecyclerView()
         bindData()
-        initPresenter()
+        initViewModel()
+
+        viewModel.loadRepos(user.login)
+
     }
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
@@ -49,13 +51,13 @@ class UserDetailsActivity : AppCompatActivity(),
         savedInstanceState.getSerializable(USER_BUNDLE_KEY)?.let { user = it as GitUserEntity }
     }
 
-    private fun extractPresenter(): UserDetailsContract.Presenter {
-        return lastCustomNonConfigurationInstance as? UserDetailsContract.Presenter
-            ?: UserDetailsPresenter(app.usersRepo)
+    private fun extractViewModel(): UserDetailsContract.ViewModel {
+        return lastCustomNonConfigurationInstance as? UserDetailsContract.ViewModel
+            ?: UserDetailsViewModel(app.usersRepo)
     }
 
-    override fun onRetainCustomNonConfigurationInstance(): UserDetailsContract.Presenter {
-        return presenter
+    override fun onRetainCustomNonConfigurationInstance(): UserDetailsContract.ViewModel {
+        return viewModel
     }
 
     private fun bindData() {
@@ -69,19 +71,20 @@ class UserDetailsActivity : AppCompatActivity(),
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun initPresenter() {
-        presenter = UserDetailsPresenter(app.usersRepo)
-        presenter = extractPresenter()
-        presenter.attach(this)
-        presenter.loadRepos(user.login)
+    private fun initViewModel() {
+        viewModel = extractViewModel()
+
+        viewModel.progressLiveData.observe(this) { showProgressBar(it) }
+        viewModel.reposLiveData.observe(this) { showRepos(it) }
+        viewModel.errorLiveData.observe(this) { showError() }
     }
 
 
-    override fun showRepos(repos: List<GitRepoEntity>) {
+    private fun showRepos(repos: List<GitRepoEntity>) {
         adapter.setData(repos)
     }
 
-    override fun showError() {
+    private fun showError() {
         Toast.makeText(
             this,
             resources.getString(R.string.error_load_repos),
@@ -89,7 +92,7 @@ class UserDetailsActivity : AppCompatActivity(),
         ).show()
     }
 
-    override fun showProgressBar(isVisible: Boolean) {
+    private fun showProgressBar(isVisible: Boolean) {
         binding.progressBar.isVisible = isVisible
     }
 }
