@@ -1,25 +1,22 @@
 package com.example.gitapp.ui
 
-import SingleEventLiveData
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.gitapp.api.GitRepoResponse
 import com.example.gitapp.domain.entities.GitRepoEntity
-import com.example.gitapp.domain.mappers.GitRepoResponseToEntityMapper
 import com.example.gitapp.domain.repos.UsersRepo
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import io.reactivex.rxjava3.subjects.BehaviorSubject
+import io.reactivex.rxjava3.subjects.Subject
 
 class UserDetailsViewModel(private val repo: UsersRepo) : UserDetailsContract.ViewModel {
 
-    override val errorLiveData: LiveData<Throwable> = SingleEventLiveData()
-    override val reposLiveData: LiveData<List<GitRepoEntity>> = MutableLiveData()
-    override val progressLiveData: LiveData<Boolean> = MutableLiveData()
+    override val errorLiveData: Observable<Throwable> = BehaviorSubject.create()
+    override val reposLiveData: Observable<List<GitRepoEntity>> = BehaviorSubject.create()
+    override val progressLiveData: Observable<Boolean> = BehaviorSubject.create()
 
     override fun loadRepos(userName: String) {
         repo.getRepos(userName)
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = ::dispatchGetReposSuccess,
                 onError = ::dispatchError
@@ -27,17 +24,17 @@ class UserDetailsViewModel(private val repo: UsersRepo) : UserDetailsContract.Vi
     }
 
     private fun dispatchGetReposSuccess(list: List<GitRepoEntity>) {
-        progressLiveData.mutable().postValue(false)
-        reposLiveData.mutable().postValue(list)
+        progressLiveData.mutable().onNext(false)
+        reposLiveData.mutable().onNext(list)
     }
 
     private fun dispatchError(error: Throwable) {
-        progressLiveData.mutable().postValue(false)
-        errorLiveData.mutable().postValue(error)
+        progressLiveData.mutable().onNext(false)
+        errorLiveData.mutable().onNext(error)
     }
 
-    private fun <T> LiveData<T>.mutable(): MutableLiveData<T> {
-        return this as? MutableLiveData<T>
+    private fun <T : Any> Observable<T>.mutable(): Subject<T> {
+        return this as? Subject<T>
             ?: throw IllegalStateException("LiveData exception")
     }
 }

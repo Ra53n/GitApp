@@ -10,8 +10,15 @@ import com.example.gitapp.R
 import com.example.gitapp.app
 import com.example.gitapp.databinding.MainActivityBinding
 import com.example.gitapp.domain.entities.GitUserEntity
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: MainActivityBinding
+
+    private lateinit var viewModel: UsersContract.ViewModel
+
+    private val compositeDisposable = CompositeDisposable()
 
     private val adapter = UsersAdapter(object : UsersAdapter.Controller {
         override fun onUserClick(user: GitUserEntity) {
@@ -21,11 +28,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     })
-
-    private lateinit var binding: MainActivityBinding
-
-    private lateinit var viewModel: UsersContract.ViewModel
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,10 +51,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViewModel() {
         viewModel = extractViewModel()
-
-        viewModel.progressLiveData.observe(this) { showProgressBar(it) }
-        viewModel.usersLiveData.observe(this) { showUsers(it) }
-        viewModel.errorLiveData.observe(this) { showError() }
+        compositeDisposable.addAll(
+            viewModel.progressLiveData.subscribe { showProgressBar(it) },
+            viewModel.usersLiveData.subscribe { showUsers(it) },
+            viewModel.errorLiveData.subscribe { showError() }
+        )
     }
 
     private fun initRecyclerView() {
@@ -74,5 +77,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun showProgressBar(isVisible: Boolean) {
         binding.progressBar.isVisible = isVisible
+    }
+
+    override fun onDestroy() {
+        compositeDisposable.dispose()
+        super.onDestroy()
     }
 }
