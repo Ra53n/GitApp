@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun extractViewModel(): UsersContract.ViewModel {
         return lastCustomNonConfigurationInstance as? UsersContract.ViewModel
-            ?: MainViewModel(app.usersRepo)
+            ?: MainViewModel(app.usersRepo, app.cacheRepo)
     }
 
     override fun onRetainCustomNonConfigurationInstance(): UsersContract.ViewModel {

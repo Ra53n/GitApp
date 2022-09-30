@@ -3,13 +3,17 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+apply plugin: "kotlin-android-extensions"
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.gitapp"
         minSdk 30
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -42,6 +46,12 @@ android {
 }
 
 dependencies {
+    //room
+    implementation "androidx.room:room-runtime:2.4.3"
+    kapt "androidx.room:room-compiler:2.4.3"
+    implementation "androidx.room:room-ktx:2.4.3"
+    implementation "androidx.room:room-rxjava3:2.4.3"
+
 
     //rxjava3
     implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
