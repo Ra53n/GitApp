@@ -7,11 +7,11 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.gitapp.R
-import com.example.gitapp.app
 import com.example.gitapp.databinding.UserDetailsActivityBinding
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 const val USER_BUNDLE_KEY = "USER_BUNDLE_KEY"
 
@@ -21,7 +21,7 @@ class UserDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: UserDetailsActivityBinding
 
-    private lateinit var viewModel: UserDetailsContract.ViewModel
+    private val viewModel: UserDetailsViewModel by viewModel()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -32,23 +32,13 @@ class UserDetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         intent.extras?.getSerializable(USER_BUNDLE_KEY)?.let {
-            initViewModel(it as GitUserEntity)
+            viewModel.bindData((it as GitUserEntity))
         }
 
         initRecyclerView()
-        viewModel.bindData()
+        subscribeLiveData()
         viewModel.loadRepos()
 
-    }
-
-
-    private fun extractViewModel(user: GitUserEntity): UserDetailsContract.ViewModel {
-        return lastCustomNonConfigurationInstance as? UserDetailsContract.ViewModel
-            ?: UserDetailsViewModel(user, app.usersRepo)
-    }
-
-    override fun onRetainCustomNonConfigurationInstance(): UserDetailsContract.ViewModel {
-        return viewModel
     }
 
     private fun bindData(user: GitUserEntity) {
@@ -62,9 +52,7 @@ class UserDetailsActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun initViewModel(user: GitUserEntity) {
-        viewModel = extractViewModel(user)
-
+    private fun subscribeLiveData() {
         compositeDisposable.addAll(
             viewModel.progressLiveData.subscribe { showProgressBar(it) },
             viewModel.reposLiveData.subscribe { showRepos(it) },

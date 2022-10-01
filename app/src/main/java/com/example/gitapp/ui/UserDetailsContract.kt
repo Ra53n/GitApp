@@ -12,6 +12,6 @@ interface UserDetailsContract {
         val progressLiveData: Observable<Boolean>
         val errorLiveData: Observable<Throwable>
         fun loadRepos()
-        fun bindData()
+        fun bindData(user: GitUserEntity)
     }
 }

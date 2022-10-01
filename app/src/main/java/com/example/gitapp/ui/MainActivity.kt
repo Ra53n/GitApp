@@ -7,17 +7,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gitapp.R
-import com.example.gitapp.app
 import com.example.gitapp.databinding.MainActivityBinding
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: MainActivityBinding
 
-    private lateinit var viewModel: UsersContract.ViewModel
+    private val viewModel: MainViewModel by viewModel()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -48,17 +48,8 @@ class MainActivity : AppCompatActivity() {
             )
     }
 
-    private fun extractViewModel(): UsersContract.ViewModel {
-        return lastCustomNonConfigurationInstance as? UsersContract.ViewModel
-            ?: MainViewModel(app.usersRepo, app.cacheRepo)
-    }
-
-    override fun onRetainCustomNonConfigurationInstance(): UsersContract.ViewModel {
-        return viewModel
-    }
 
     private fun initViewModel() {
-        viewModel = extractViewModel()
         compositeDisposable.addAll(
             viewModel.progressLiveData.subscribe { showProgressBar(it) },
             viewModel.usersLiveData.subscribe { showUsers(it) },

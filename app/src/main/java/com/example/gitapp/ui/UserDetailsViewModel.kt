@@ -1,5 +1,6 @@
 package com.example.gitapp.ui
 
+import androidx.lifecycle.ViewModel
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.entities.GitUserEntity
 import com.example.gitapp.domain.repos.UsersRepo
@@ -10,14 +11,15 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.Subject
 
 class UserDetailsViewModel(
-    private val user: GitUserEntity,
     private val repo: UsersRepo
-) : UserDetailsContract.ViewModel {
+) : UserDetailsContract.ViewModel, ViewModel() {
 
     override val errorLiveData: Observable<Throwable> = BehaviorSubject.create()
     override val reposLiveData: Observable<List<GitRepoEntity>> = BehaviorSubject.create()
     override val progressLiveData: Observable<Boolean> = BehaviorSubject.create()
     override val userLiveData: Observable<GitUserEntity> = BehaviorSubject.create()
+
+    private lateinit var user: GitUserEntity
 
     override fun loadRepos() {
         repo.getRepos(user.login)
@@ -28,7 +30,8 @@ class UserDetailsViewModel(
             )
     }
 
-    override fun bindData() {
+    override fun bindData(user: GitUserEntity) {
+        this.user = user
         userLiveData.mutable().onNext(user)
     }
 
