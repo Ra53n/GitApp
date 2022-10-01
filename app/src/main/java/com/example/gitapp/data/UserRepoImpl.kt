@@ -8,22 +8,12 @@ import com.example.gitapp.domain.mappers.GitRepoResponseToEntityMapper
 import com.example.gitapp.domain.mappers.GitUserResponseToEntityMapper
 import com.example.gitapp.domain.repos.UsersRepo
 import io.reactivex.rxjava3.core.Single
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
 
-class UserRepoImpl : UsersRepo {
-
-    private val userMapper = GitUserResponseToEntityMapper()
-
-    private val repoMapper = GitRepoResponseToEntityMapper()
-
-    private val api = Retrofit.Builder()
-        .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
-        .baseUrl(GIT_END_POINT)
-        .build()
-        .create(GitApi::class.java)
+class UserRepoImpl(
+    private val api: GitApi,
+    private val userMapper: GitUserResponseToEntityMapper,
+    private val repoMapper: GitRepoResponseToEntityMapper
+) : UsersRepo {
 
     override fun getUsers(): Single<List<GitUserEntity>> =
         api.getUsers(BuildConfig.GIT_TOKEN)
@@ -36,9 +26,4 @@ class UserRepoImpl : UsersRepo {
             .map { list ->
                 list.map { repoMapper.map(it) }
             }
-
-
-    companion object {
-        private const val GIT_END_POINT = "https://api.github.com/"
-    }
 }

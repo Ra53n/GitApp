@@ -1,6 +1,7 @@
 package com.example.gitapp.ui
 
 import com.example.gitapp.domain.entities.GitRepoEntity
+import com.example.gitapp.domain.entities.GitUserEntity
 import com.example.gitapp.domain.repos.UsersRepo
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -8,19 +9,27 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.Subject
 
-class UserDetailsViewModel(private val repo: UsersRepo) : UserDetailsContract.ViewModel {
+class UserDetailsViewModel(
+    private val user: GitUserEntity,
+    private val repo: UsersRepo
+) : UserDetailsContract.ViewModel {
 
     override val errorLiveData: Observable<Throwable> = BehaviorSubject.create()
     override val reposLiveData: Observable<List<GitRepoEntity>> = BehaviorSubject.create()
     override val progressLiveData: Observable<Boolean> = BehaviorSubject.create()
+    override val userLiveData: Observable<GitUserEntity> = BehaviorSubject.create()
 
-    override fun loadRepos(userName: String) {
-        repo.getRepos(userName)
+    override fun loadRepos() {
+        repo.getRepos(user.login)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = ::dispatchGetReposSuccess,
                 onError = ::dispatchError
             )
+    }
+
+    override fun bindData() {
+        userLiveData.mutable().onNext(user)
     }
 
     private fun dispatchGetReposSuccess(list: List<GitRepoEntity>) {
