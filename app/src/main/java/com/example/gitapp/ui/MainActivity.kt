@@ -11,7 +11,7 @@ import com.example.gitapp.app
 import com.example.gitapp.databinding.MainActivityBinding
 import com.example.gitapp.domain.entities.GitUserEntity
 
-class MainActivity : AppCompatActivity(), UsersContract.View {
+class MainActivity : AppCompatActivity() {
 
     private val adapter = UsersAdapter(object : UsersAdapter.Controller {
         override fun onUserClick(user: GitUserEntity) {
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity(), UsersContract.View {
 
     private lateinit var binding: MainActivityBinding
 
-    private lateinit var presenter: UsersContract.Presenter
+    private lateinit var viewModel: UsersContract.ViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,28 +34,25 @@ class MainActivity : AppCompatActivity(), UsersContract.View {
 
         initRecyclerView()
 
-        initPresenter()
+        initViewModel()
+        viewModel.loadUsers()
     }
 
-    private fun extractPresenter(): UsersContract.Presenter {
-        return lastCustomNonConfigurationInstance as? UsersContract.Presenter
-            ?: MainPresenter(app.usersRepo)
+    private fun extractViewModel(): UsersContract.ViewModel {
+        return lastCustomNonConfigurationInstance as? UsersContract.ViewModel
+            ?: MainViewModel(app.usersRepo)
     }
 
-    override fun onRetainCustomNonConfigurationInstance(): UsersContract.Presenter {
-        return presenter
+    override fun onRetainCustomNonConfigurationInstance(): UsersContract.ViewModel {
+        return viewModel
     }
 
-    override fun onDestroy() {
-        presenter.detach()
-        super.onDestroy()
-    }
+    private fun initViewModel() {
+        viewModel = extractViewModel()
 
-    private fun initPresenter() {
-        presenter = MainPresenter(app.usersRepo)
-        presenter = extractPresenter()
-        presenter.attach(this)
-        presenter.loadUsers()
+        viewModel.progressLiveData.observe(this) { showProgressBar(it) }
+        viewModel.usersLiveData.observe(this) { showUsers(it) }
+        viewModel.errorLiveData.observe(this) { showError() }
     }
 
     private fun initRecyclerView() {
@@ -63,11 +60,11 @@ class MainActivity : AppCompatActivity(), UsersContract.View {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    override fun showUsers(users: List<GitUserEntity>) {
+    private fun showUsers(users: List<GitUserEntity>) {
         adapter.setData(users)
     }
 
-    override fun showError() {
+    private fun showError() {
         Toast.makeText(
             this,
             resources.getString(R.string.error_load_users),
@@ -75,7 +72,7 @@ class MainActivity : AppCompatActivity(), UsersContract.View {
         ).show()
     }
 
-    override fun showProgressBar(isVisible: Boolean) {
+    private fun showProgressBar(isVisible: Boolean) {
         binding.progressBar.isVisible = isVisible
     }
 }

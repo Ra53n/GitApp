@@ -1,18 +1,14 @@
 package com.example.gitapp.ui
 
+import androidx.lifecycle.LiveData
 import com.example.gitapp.domain.entities.GitRepoEntity
 
 interface UserDetailsContract {
 
-    interface View {
-        fun showRepos(repos: List<GitRepoEntity>)
-        fun showError()
-        fun showProgressBar(isVisible: Boolean)
-    }
-
-    interface Presenter {
-        fun attach(view: View)
-        fun detach()
+    interface ViewModel {
+        val reposLiveData: LiveData<List<GitRepoEntity>>
+        val progressLiveData: LiveData<Boolean>
+        val errorLiveData: LiveData<Throwable>
         fun loadRepos(userName: String)
     }
 }

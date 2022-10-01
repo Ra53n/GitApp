@@ -1,5 +1,8 @@
 package com.example.gitapp.ui
 
+import SingleEventLiveData
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.gitapp.api.GitRepoResponse
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.mappers.GitRepoResponseToEntityMapper
@@ -8,24 +11,13 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class UserDetailsPresenter(private val repo: UsersRepo) : UserDetailsContract.Presenter {
-
-    private var view: UserDetailsContract.View? = null
+class UserDetailsViewModel(private val repo: UsersRepo) : UserDetailsContract.ViewModel {
 
     private val mapper = GitRepoResponseToEntityMapper()
 
-    private var reposList: List<GitRepoEntity>? = null
-    private var inProgress: Boolean = false
-
-    override fun attach(view: UserDetailsContract.View) {
-        this.view = view
-        view.showProgressBar(inProgress)
-        reposList?.let { view.showRepos(it) }
-    }
-
-    override fun detach() {
-        view = null
-    }
+    override val errorLiveData: LiveData<Throwable> = SingleEventLiveData()
+    override val reposLiveData: LiveData<List<GitRepoEntity>> = MutableLiveData()
+    override val progressLiveData: LiveData<Boolean> = MutableLiveData()
 
     override fun loadRepos(userName: String) {
         repo.getRepos(userName, callback)
@@ -37,21 +29,24 @@ class UserDetailsPresenter(private val repo: UsersRepo) : UserDetailsContract.Pr
             response: Response<List<GitRepoResponse>>
         ) {
             if (response.isSuccessful) {
-                inProgress = false
-                view?.showProgressBar(inProgress)
+                progressLiveData.mutable().postValue(false)
                 response.body()
                     ?.let {
                         val repoList = it.map { response -> mapper.map(response) }
-                        view?.showRepos(repoList)
-                        reposList = repoList
+                        reposLiveData.mutable().postValue(repoList)
                     }
             }
         }
 
         override fun onFailure(call: Call<List<GitRepoResponse>>, t: Throwable) {
-            inProgress = false
-            view?.showProgressBar(inProgress)
-            view?.showError()
+            progressLiveData.mutable().postValue(false)
+            errorLiveData.mutable().postValue(t)
         }
+    }
+
+
+    private fun <T> LiveData<T>.mutable(): MutableLiveData<T> {
+        return this as? MutableLiveData<T>
+            ?: throw IllegalStateException("LiveData exception")
     }
 }
