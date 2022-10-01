@@ -12,6 +12,7 @@ import com.example.gitapp.app
 import com.example.gitapp.databinding.UserDetailsActivityBinding
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.entities.GitUserEntity
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 const val USER_BUNDLE_KEY = "USER_BUNDLE_KEY"
 
@@ -23,6 +24,8 @@ class UserDetailsActivity : AppCompatActivity() {
     private lateinit var binding: UserDetailsActivityBinding
 
     private lateinit var viewModel: UserDetailsContract.ViewModel
+
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,9 +77,11 @@ class UserDetailsActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel = extractViewModel()
 
-        viewModel.progressLiveData.observe(this) { showProgressBar(it) }
-        viewModel.reposLiveData.observe(this) { showRepos(it) }
-        viewModel.errorLiveData.observe(this) { showError() }
+        compositeDisposable.addAll(
+            viewModel.progressLiveData.subscribe { showProgressBar(it) },
+            viewModel.reposLiveData.subscribe { showRepos(it) },
+            viewModel.errorLiveData.subscribe { showError() }
+        )
     }
 
 
@@ -94,5 +99,10 @@ class UserDetailsActivity : AppCompatActivity() {
 
     private fun showProgressBar(isVisible: Boolean) {
         binding.progressBar.isVisible = isVisible
+    }
+
+    override fun onDestroy() {
+        compositeDisposable.dispose()
+        super.onDestroy()
     }
 }

@@ -1,54 +1,53 @@
 package com.example.gitapp.ui
 
-import SingleEventLiveData
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.gitapp.api.GitUserResponse
 import com.example.gitapp.domain.entities.GitUserEntity
-import com.example.gitapp.domain.mappers.GitUserResponseToEntityMapper
+import com.example.gitapp.domain.repos.CacheRepo
 import com.example.gitapp.domain.repos.UsersRepo
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.kotlin.subscribeBy
+import io.reactivex.rxjava3.subjects.BehaviorSubject
+import io.reactivex.rxjava3.subjects.Subject
 
-class MainViewModel(private val repo: UsersRepo) : UsersContract.ViewModel {
+class MainViewModel(private val repo: UsersRepo, private val cacheRepo: CacheRepo) :
+    UsersContract.ViewModel {
 
-    private val mapper = GitUserResponseToEntityMapper()
-
-    override val errorLiveData: LiveData<Throwable> = SingleEventLiveData()
-    override val usersLiveData: LiveData<List<GitUserEntity>> = MutableLiveData()
-    override val progressLiveData: LiveData<Boolean> = MutableLiveData()
+    override val errorLiveData: Observable<Throwable> = BehaviorSubject.create()
+    override val usersLiveData: Observable<List<GitUserEntity>> = BehaviorSubject.create()
+    override val progressLiveData: Observable<Boolean> = BehaviorSubject.create()
 
 
     override fun loadUsers() {
-        progressLiveData.mutable().postValue(true)
-        repo.getUsers(callback)
+        progressLiveData.mutable().onNext(true)
+        repo.getUsers()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = ::dispatchGetUsersSuccess,
+                onError = ::dispatchError
+            )
     }
 
-    private val callback = object : Callback<List<GitUserResponse>> {
-        override fun onResponse(
-            call: Call<List<GitUserResponse>>,
-            response: Response<List<GitUserResponse>>
-        ) {
-            if (response.isSuccessful) {
-                progressLiveData.mutable().postValue(false)
-                response.body()
-                    ?.let {
-                        val userList = it.map { response -> mapper.map(response) }
-                        usersLiveData.mutable().postValue(userList)
-                    }
-            }
-        }
-
-        override fun onFailure(call: Call<List<GitUserResponse>>, t: Throwable) {
-            progressLiveData.mutable().postValue(false)
-            errorLiveData.mutable().postValue(t)
-        }
+    private fun dispatchGetUsersSuccess(list: List<GitUserEntity>) {
+        progressLiveData.mutable().onNext(false)
+        usersLiveData.mutable().onNext(list)
+        Thread {
+            cacheRepo.setUsers(list)
+        }.start()
     }
 
+    private fun dispatchError(error: Throwable) {
+        progressLiveData.mutable().onNext(false)
+        cacheRepo.getUsers()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onNext = { usersLiveData.mutable().onNext(it) },
+                onError = { errorLiveData.mutable().onNext(error) }
+            )
+        errorLiveData.mutable().onNext(error)
+    }
 
-    private fun <T> LiveData<T>.mutable(): MutableLiveData<T> {
-        return this as? MutableLiveData<T>
+    private fun <T : Any> Observable<T>.mutable(): Subject<T> {
+        return this as? Subject<T>
             ?: throw IllegalStateException("LiveData exception")
     }
 }
