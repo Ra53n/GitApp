@@ -11,6 +11,7 @@ import com.example.gitapp.app
 import com.example.gitapp.databinding.MainActivityBinding
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.kotlin.subscribeBy
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,6 +39,13 @@ class MainActivity : AppCompatActivity() {
 
         initViewModel()
         viewModel.loadUsers()
+        binding.button
+            .observeButton()
+            .subscribeBy(
+                onNext = {
+                    viewModel.loadUsers()
+                }
+            )
     }
 
     private fun extractViewModel(): UsersContract.ViewModel {
