@@ -1,5 +1,6 @@
 package com.example.gitapp.ui
 
+import androidx.lifecycle.ViewModel
 import com.example.gitapp.domain.entities.GitUserEntity
 import com.example.gitapp.domain.repos.CacheRepo
 import com.example.gitapp.domain.repos.UsersRepo
@@ -9,8 +10,10 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.Subject
 
-class MainViewModel(private val repo: UsersRepo, private val cacheRepo: CacheRepo) :
-    UsersContract.ViewModel {
+class MainViewModel(
+    private val repo: UsersRepo,
+    private val cacheRepo: CacheRepo
+) : UsersContract.ViewModel, ViewModel() {
 
     override val errorLiveData: Observable<Throwable> = BehaviorSubject.create()
     override val usersLiveData: Observable<List<GitUserEntity>> = BehaviorSubject.create()

@@ -1,29 +1,27 @@
 package com.example.gitapp.ui
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.gitapp.R
-import com.example.gitapp.app
 import com.example.gitapp.databinding.UserDetailsActivityBinding
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 const val USER_BUNDLE_KEY = "USER_BUNDLE_KEY"
 
 class UserDetailsActivity : AppCompatActivity() {
-    lateinit var user: GitUserEntity
 
     private val adapter = ReposAdapter()
 
     private lateinit var binding: UserDetailsActivityBinding
 
-    private lateinit var viewModel: UserDetailsContract.ViewModel
+    private val viewModel: UserDetailsViewModel by viewModel()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -34,36 +32,16 @@ class UserDetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         intent.extras?.getSerializable(USER_BUNDLE_KEY)?.let {
-            user = it as GitUserEntity
+            viewModel.bindData((it as GitUserEntity))
         }
 
         initRecyclerView()
-        bindData()
-        initViewModel()
-
-        viewModel.loadRepos(user.login)
+        subscribeLiveData()
+        viewModel.loadRepos()
 
     }
 
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        outState.putSerializable(USER_BUNDLE_KEY, user)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        savedInstanceState.getSerializable(USER_BUNDLE_KEY)?.let { user = it as GitUserEntity }
-    }
-
-    private fun extractViewModel(): UserDetailsContract.ViewModel {
-        return lastCustomNonConfigurationInstance as? UserDetailsContract.ViewModel
-            ?: UserDetailsViewModel(app.usersRepo)
-    }
-
-    override fun onRetainCustomNonConfigurationInstance(): UserDetailsContract.ViewModel {
-        return viewModel
-    }
-
-    private fun bindData() {
+    private fun bindData(user: GitUserEntity) {
         binding.avatar.load(user.avatarUrl)
         binding.loginTextView.text = user.login
         binding.uidTextView.text = user.id
@@ -74,13 +52,12 @@ class UserDetailsActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    private fun initViewModel() {
-        viewModel = extractViewModel()
-
+    private fun subscribeLiveData() {
         compositeDisposable.addAll(
             viewModel.progressLiveData.subscribe { showProgressBar(it) },
             viewModel.reposLiveData.subscribe { showRepos(it) },
-            viewModel.errorLiveData.subscribe { showError() }
+            viewModel.errorLiveData.subscribe { showError() },
+            viewModel.userLiveData.subscribe { bindData(it) }
         )
     }
 
