@@ -9,8 +9,9 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.Subject
+import javax.inject.Inject
 
-class MainViewModel(
+class MainViewModel @Inject constructor(
     private val repo: UsersRepo,
     private val cacheRepo: CacheRepo
 ) : UsersContract.ViewModel, ViewModel() {

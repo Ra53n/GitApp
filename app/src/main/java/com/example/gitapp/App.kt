@@ -1,20 +1,16 @@
 package com.example.gitapp
 
 import android.app.Application
-import com.example.gitapp.di.appModule
-import org.koin.android.ext.koin.androidContext
-import org.koin.android.ext.koin.androidLogger
-import org.koin.core.context.startKoin
+import android.content.Context
+import com.example.gitapp.di.DaggerAppComponent
 
 class App : Application() {
 
-    override fun onCreate() {
-        super.onCreate()
-
-        startKoin {
-            androidLogger()
-            androidContext(this@App)
-            modules(appModule)
-        }
+    val appComponent by lazy {
+        DaggerAppComponent.builder()
+            .application(this)
+            .build()
     }
 }
+
+val Context.app: App get() = applicationContext as App
