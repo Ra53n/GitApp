@@ -6,20 +6,18 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.di.get
 import com.example.gitapp.R
-import com.example.gitapp.app
 import com.example.gitapp.databinding.MainActivityBinding
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: MainActivityBinding
 
-    @Inject
-    lateinit var viewModel: MainViewModel
+    private val viewModel by lazy { MainViewModel(get(), get()) }
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -34,7 +32,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        app.appComponent.inject(this)
         binding = MainActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

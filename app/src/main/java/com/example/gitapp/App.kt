@@ -2,14 +2,13 @@ package com.example.gitapp
 
 import android.app.Application
 import android.content.Context
-import com.example.gitapp.di.DaggerAppComponent
+import com.example.gitapp.di.provideAppModule
 
 class App : Application() {
 
-    val appComponent by lazy {
-        DaggerAppComponent.builder()
-            .application(this)
-            .build()
+    override fun onCreate() {
+        super.onCreate()
+        provideAppModule(applicationContext).install()
     }
 }
 

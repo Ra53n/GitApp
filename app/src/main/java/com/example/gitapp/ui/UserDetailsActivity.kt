@@ -6,13 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
+import com.example.di.get
 import com.example.gitapp.R
-import com.example.gitapp.app
 import com.example.gitapp.databinding.UserDetailsActivityBinding
 import com.example.gitapp.domain.entities.GitRepoEntity
 import com.example.gitapp.domain.entities.GitUserEntity
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import javax.inject.Inject
 
 const val USER_BUNDLE_KEY = "USER_BUNDLE_KEY"
 
@@ -22,14 +21,12 @@ class UserDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: UserDetailsActivityBinding
 
-    @Inject
-    lateinit var viewModel: UserDetailsViewModel
+    private val viewModel by lazy { UserDetailsViewModel(get()) }
 
     private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        app.appComponent.inject(this)
 
         binding = UserDetailsActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
